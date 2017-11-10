@@ -1,5 +1,8 @@
 class Mycharacter:
-    def __ini__(self,direction,coordinate,speed=10):
+    speed=0
+    positon=(0,0)
+    volume=7
+    def __init__(self,direction,coordinate,speed=10):
         self.x=coordiantes[0]
         self.y=coordiantes[1]
         self.speed=speed
