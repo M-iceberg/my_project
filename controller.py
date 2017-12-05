@@ -11,36 +11,38 @@ GREEN = (0, 255, 0)
 class Controller:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((800, 800))
+        self.screen = pygame.display.set_mode((700, 700))
         self.background = pygame.Surface(self.screen.get_size()).convert()
         #self.button_image = pygame.image.load("start_button.png").convert
-        self.button = pygame.Rect(350, 50, 100, 100)
+        self.button = pygame.Rect(300, 150, 100, 50)
         #self.button_image.get_rect()
-        self.font = pygame.font.Font("Shark_Soft_Bites.TTF", 60)
+        self.font = pygame.font.Font("Shark_Soft_Bites.TTF", 50)
         self.text = pygame.font.Font.render(self.font,"Start", True, (255, 0, 0))
         #self.score_text = pygame.font.Font.render("Highscore: "+ str())
         self.file = open("highscores.json", "r")
-        self.currentState = "Start"
+        self.currentState = "start"
         self.obstacles = []
         for i in range(5):
-            x = random.randrange(50, 600)
-            y = random.randrange(60, 700)
+            x = random.randrange(45, 600)
+            y = random.randrange(55, 625)
             self.obstacles.append(obstacle.Obstacle((x, y), 'rock.png' ))
         self.enemies = []
         for i in range(3) :
             if i == 0:
-                x = 725
+                x = 650
                 y = 100
             elif i == 1:
                 x = 75
-                y = 700
+                y = 650
             elif i == 2:
-                x = 725
-                y = 700
+                x = 650
+                y = 650
             self.enemies.append(enemy.Enemy((x, y), "enemy.png"))
         self.Mycharacter = Mycharacter.Mycharacter((75, 100), "head6.png")
         self.mysprites = pygame.sprite.Group((self.Mycharacter,) + tuple(self.enemies) + tuple(self.obstacles))
         self.mysprites2 = pygame.sprite.Group(tuple(self.enemies) + tuple(self.obstacles))
+        self.mysprites3 = pygame.sprite.Group((self.Mycharacter,))
+        self.mysprites4 = pygame.sprite.Group(tuple(self.enemies))
         self.score = 0
         self.end_time = 0
         self.start_time = 0
@@ -55,14 +57,16 @@ class Controller:
         Return list: None
         """
         self.done = False
+        print("got to mainloop")
         while not self.done:
             if self.currentState == "start":
-                self.startGame(self)
+                self.startGame()
             elif self.currentState == "running":
+                print("running")
                 self.start_time = pygame.time.get_ticks()
-                self.runGame(self)
+                self.runGame()
             elif self.currentState == "end":
-                self.endGame(self)
+                self.endGame()
         pygame.quit
 
     def startGame(self):
@@ -74,25 +78,26 @@ class Controller:
         Returns: None
         """
         start = True
+        clock = pygame.time.Clock
         while start:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.done = True
                     start = False
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
                     if self.button.collidepoint(mouse_pos):
                         self.currentState = "running"
                         start = False
             self.screen.fill((255, 0, 255))
             pygame.draw.rect(self.screen, (0, 0, 0), self.button)
-            self.screen.blit(self.text, (350,50))
+            self.screen.blit(self.text, (310,145))
             pygame.display.flip()
         pygame.quit
 
     def runGame(self):
         run = True
-        clock = pygame.time.Clock
+        pygame.key.set_repeat(1,50)
         while run:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -108,22 +113,29 @@ class Controller:
                         self.Mycharacter.move_left()
                     elif(event.key == pygame.K_RIGHT):
                         self.Mycharacter.move_right()
-                self.score += 1
-                if self.score > 400:
-                    if self.score > 800:
-                        if self.score > 1200:
-                            self.enemy.speed(18)
-                        else:
-                            self.enemy.speed(16)
-                    else:
-                        self.enemy.speed(14)
-                else:
-                    self.enemy.speed(12)
-
+                """
+                self.end_time = pygame.time.get_ticks()
+                for g in self.mysprites4.sprites:
+                    if self.time > 15:
+                        g.speed(12)
+                    elif self.time > 30:
+                        g.speed(14)
+                    elif self.time > 45:
+                        g.speed(16)
+                    elif self.time > 60:
+                        g.speed(18)
+                    elif self.time > 75:
+                        g.speed(20)
+                """
                 self.mysprites.update()
                 #self.mysprites2.group_collide
                 #possibly sprite.groupcollide to save myself these two loops but I like the loops
                 #also idk if the dokill means it will .kill() or something else
+                if pygame.sprite.groupcollide(self.mysprites, self.mysprites3, False, True):
+                    self.currentState = 'end'
+                    self.end_time = pygame.time.get_ticks()
+                    run = False
+                """
                 for i in range(len(self.obstacles)):
                     if(pygame.sprite.collide_rect(self.Mycharacter, self.obstacle[i])):
                         self.Mycharacter.kill()
@@ -137,18 +149,17 @@ class Controller:
                         self.currentState = "end"
                         self.end_time = pygame.time.get_ticks()
                         run = False
+                """
 
-                self.screen.fill(GREEN)
+                self.screen.fill((0, 255, 0))
                 #self.obstacles.draw(self.screen)
                 #self.enemies.draw(self.screen)
                 self.screen.blit(self.background, (0, 0))
-                self.mysprites.draw()
+                self.mysprites.draw(self.screen)
                 #self.screen.blit(self.Mycharacter,(self.Mycharacter.rect.x, self.Mycharacter.rect.y))
                         #drawing code
                         #update screen with what has been drawn
                 pygame.display.flip()
-
-                clock.tick(60)
         pygame.quit
 
     def endGame(self):
@@ -157,7 +168,7 @@ class Controller:
         end = False
         while not end:
             for event in pygame.event.get():
-                if event == pygame.QUIT:
+                if event.type == pygame.QUIT:
                     end = True
                     self.done = True
                 else:
@@ -176,8 +187,8 @@ class Controller:
                     self.file.close()
                     self.screen.fill((0, 0, 255))
                     #create text and rect to blit onto screen to display high score
-                    self.screen.blit("Highscore: " + str(score), (350, 50))
-                    self.screen.blit("Your Score: " + str(num), (350, 150))
+                    self.screen.blit("Highscore: " + str(score), (325, 50))
+                    self.screen.blit("Your Score: " + str(num), (325, 150))
                     pygame.display.flip()
         pygame.quit
 

@@ -29,9 +29,9 @@ class Mycharacter(pygame.sprite.Sprite):
         #get the rectangle for posotioning
 
         self.rect=self.image.get_rect()
-
+        self.image = pygame.transform.scale(self.image, (35,35))
+        self.rect = self.image.get_rect()
         self.rect.x = coordinates[0]
-
         self.rect.y = coordinates[1]
 
 
